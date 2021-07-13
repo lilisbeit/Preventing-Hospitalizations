@@ -6,16 +6,17 @@ from sklearn.metrics import plot_confusion_matrix, accuracy_score, recall_score,
 
 
 
-def no_bytes(df):
-    
-    for col in df:
-        if df[col].dtype == 'object':
-            df[col] = df[col].map(lambda x: x.decode("utf-8"))
-            
-    return df 
-
-
 def import_and_decode(file_name):
+    
+    """Imports sas files and converts columns of type 'bytes' to 'utf-8'.
+    
+    Parameters
+    ----------
+    file_name : String.  File path and name with .xpt extension (sas file).
+    
+    Returns
+    -------
+    DataFrame"""
     
     df = pd.read_sas(file_name)
     
@@ -23,7 +24,32 @@ def import_and_decode(file_name):
         if df[col].dtype == 'object':
             df[col] = df[col].map(lambda x: x.decode("utf-8"))
             
-    return df 
+    return df
+
+
+
+def replace_with_median(col, value_to_replace):
+    
+    """Replaces a dummy number with the median of the other numbers in the column.
+    
+    Parameters
+    ----------
+    
+    col : Pandas DataFrame column with numeric values
+    
+    value_to_replace : Dummy value that needs to be replaced
+    
+    Returns
+    -------
+    
+    DataFrame column with dummy values now replaced with median."""
+    
+    real_values = col.loc[(~col.isna()) & (col != value_to_replace)]
+
+    true_median = real_values.median()
+
+    return col.replace(value_to_replace, true_median)
+
 
 
 def k_fold_validator(X, y, classifier, cv=5):
