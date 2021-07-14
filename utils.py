@@ -50,7 +50,20 @@ def replace_with_median(col, value_to_replace):
 
     return col.replace(value_to_replace, true_median)
 
+demo_j = import_and_decode('data/demo_j.xpt') # demographics
+age = demo_j[['SEQN', 'RIDAGEYR']]
 
+def get_years(df, new_col_name, age_diagnosed_col):
+    new_df = df.merge(age, how='left', on='SEQN')
+    new_df[new_col_name] = new_df['RIDAGEYR'] - new_df[age_diagnosed_col]
+    new_df.loc[new_df[new_col_name] < 0, new_col_name] = arthritis_5['RIDAGEYR']
+    new_df.drop(columns = [age_diagnosed_col, 'RIDAGEYR'], inplace=True)
+    return new_df
+
+def make_binary(df, cols):
+    binary_df = df.copy()
+    binary_df[cols] = binary_df[cols].applymap(lambda x: 1 if x > 0 else 0)
+    return binary_df
 
 def k_fold_validator(X, y, classifier, cv=5):
 
