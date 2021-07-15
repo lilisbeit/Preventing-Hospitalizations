@@ -5,7 +5,6 @@ from sklearn.model_selection import train_test_split, cross_val_score, KFold
 from sklearn.metrics import plot_confusion_matrix, accuracy_score, recall_score, precision_score, f1_score
 
 
-
 def import_and_decode(file_name):
     
     """Imports sas files and converts columns of type 'bytes' to 'utf-8'.
@@ -25,7 +24,6 @@ def import_and_decode(file_name):
             df[col] = df[col].map(lambda x: x.decode("utf-8"))
             
     return df
-
 
 
 def replace_with_median(col, value_to_replace):
@@ -50,20 +48,36 @@ def replace_with_median(col, value_to_replace):
 
     return col.replace(value_to_replace, true_median)
 
-demo_j = import_and_decode('data/demo_j.xpt') # demographics
-age = demo_j[['SEQN', 'RIDAGEYR']]
 
-def get_years(df, new_col_name, age_diagnosed_col):
+# import data and create 'age' df for use in get_years function
+demo_j = import_and_decode('data/demo_j.xpt') # demographics
+age = demo_j[['SEQN', 'RIDAGEYR']] # create age df
+
+
+def get_years(df, age_diagnosed_col, new_col_name):
+    
+    # create new dataframe that includes participant age column
     new_df = df.merge(age, how='left', on='SEQN')
+    
+    # create new column showing how many years participant had the condition
     new_df[new_col_name] = new_df['RIDAGEYR'] - new_df[age_diagnosed_col]
-    new_df.loc[new_df[new_col_name] < 0, new_col_name] = arthritis_5['RIDAGEYR']
+    
+    # some values of 'age at diagnosis' may be substituted with median if unknown
+    # if participant age minus median is negative, substitute participant age for years with condition
+    new_df.loc[new_df[new_col_name] < 0, new_col_name] = new_df['RIDAGEYR']
+    
+    # clean up new df by dropping columns no longer needed
     new_df.drop(columns = [age_diagnosed_col, 'RIDAGEYR'], inplace=True)
     return new_df
+
 
 def make_binary(df, cols):
     binary_df = df.copy()
     binary_df[cols] = binary_df[cols].applymap(lambda x: 1 if x > 0 else 0)
+    for col in cols:
+        binary_df.rename(columns = {col: col[4:] + '_binary'}, inplace=True)
     return binary_df
+
 
 def k_fold_validator(X, y, classifier, cv=5):
 
