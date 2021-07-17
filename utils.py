@@ -60,8 +60,11 @@ def get_years(df, age_diagnosed_col, new_col_name):
     new_df = df.merge(age, how='left', on='SEQN')
     
     # create new column showing how many years participant had the condition
-    new_df[new_col_name] = new_df['RIDAGEYR'] - new_df[age_diagnosed_col]
-    
+    # if age at diagnosis = 80, impute 1 year, since both age at diagnosis and 
+    # participant age are top-coded at 80 in NHANES
+    new_df[new_col_name] = np.where(new_df[age_diagnosed_col] == 80, 1, 
+                                    new_df['RIDAGEYR'] - new_df[age_diagnosed_col])
+
     # some values of 'age at diagnosis' may be substituted with median if unknown
     # if participant age minus median is negative, substitute participant age for years with condition
     new_df.loc[new_df[new_col_name] < 0, new_col_name] = new_df['RIDAGEYR']
