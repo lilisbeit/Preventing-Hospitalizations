@@ -4,13 +4,16 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, cross_val_score, KFold
-from sklearn.metrics import plot_confusion_matrix, accuracy_score, recall_score, precision_score, f1_score, roc_curve, auc
+from sklearn.metrics import accuracy_score, recall_score, precision_score, roc_auc_score
+from sklearn.metrics import confusion_matrix, plot_confusion_matrix
+
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import cross_val_score, cross_validate
 from sklearn.naive_bayes import ComplementNB
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from xgboost import XGBClassifier
 
 # define functions
 
@@ -111,7 +114,7 @@ def k_fold_validator(X, y, classifier, cv=5):
     
     No objects returned.
     
-    Prints mean recall, precision, and f1 scores for train and test sets.
+    Prints mean recall and precision scores for train and test sets.
     Prints a list of the model coefficients and their weights.
     Plots a confusion matrix for each test set."""
     
@@ -125,10 +128,10 @@ def k_fold_validator(X, y, classifier, cv=5):
 
     train_recall_scores = []
     train_precision_scores = []
-    train_f1_scores = []
+    train_roc_auc_scores = []
     test_recall_scores = []
     test_precision_scores = []
-    test_f1_scores = []
+    test_roc_auc_scores = []
     
     print('Classifier:', clf)
     print('Cross-validation folds:', cv)
@@ -139,21 +142,23 @@ def k_fold_validator(X, y, classifier, cv=5):
     
     for train_index, test_index in kf.split(X_scaled):
 
-        X_tr, X_test = X_scaled.iloc[train_index].astype(str), X_scaled.iloc[test_index].astype(str)
-        y_tr, y_test = y.iloc[train_index].astype(str), y.iloc[test_index].astype(str)
+        X_tr, X_test = X_scaled.iloc[train_index], X_scaled.iloc[test_index]
+        y_tr, y_test = y.iloc[train_index], y.iloc[test_index]
         
         clf.fit(X_tr, y_tr)
 
         y_pred_tr = clf.predict(X_tr)
         y_pred_test = clf.predict(X_test)
 
-        train_recall_scores.append(recall_score(y_tr, y_pred_tr, pos_label='1.0'))
-        train_precision_scores.append(precision_score(y_tr, y_pred_tr, pos_label='1.0'))
-        train_f1_scores.append(f1_score(y_tr, y_pred_tr, pos_label='1.0'))       
-        test_recall_scores.append(recall_score(y_test, y_pred_test, pos_label='1.0'))
-        test_precision_scores.append(precision_score(y_test, y_pred_test, pos_label='1.0'))
-        test_f1_scores.append(f1_score(y_test, y_pred_test, pos_label='1.0'))       
+        train_recall_scores.append(recall_score(y_tr, y_pred_tr, pos_label=1.0))
+        train_precision_scores.append(precision_score(y_tr, y_pred_tr, pos_label=1.0))
+        train_roc_auc_scores.append(roc_auc_score(y_tr, y_pred_tr))
         
+        test_recall_scores.append(recall_score(y_test, y_pred_test, pos_label=1.0))
+        test_precision_scores.append(precision_score(y_test, y_pred_test, pos_label=1.0))
+        test_roc_auc_scores.append(roc_auc_score(y_test, y_pred_test))
+        
+
         plot_confusion_matrix(clf, X_test, y_test)
         plt.title('Test set')
         
@@ -165,8 +170,8 @@ def k_fold_validator(X, y, classifier, cv=5):
     print('Train mean precision: {} +/- {}'.format(round(pd.Series(train_precision_scores).mean(), 2),
                                                   round(pd.Series(train_precision_scores).std(), 2)))
     
-    print('Train mean F1: {} +/- {}'.format(round(pd.Series(train_f1_scores).mean(), 2),
-                                           round(pd.Series(train_f1_scores).std(), 2)))
+    print('Train mean ROC-AUC: {} +/- {}'.format(round(pd.Series(train_roc_auc_scores).mean(), 2),
+                                                  round(pd.Series(train_roc_auc_scores).std(), 3)))   
     print('\n')
     
     print('Test mean recall: {} +/- {}'.format(round(pd.Series(test_recall_scores).mean(), 2),
@@ -175,18 +180,25 @@ def k_fold_validator(X, y, classifier, cv=5):
     print('Test mean precision: {} +/- {}'.format(round(pd.Series(test_precision_scores).mean(), 2),
                                                   round(pd.Series(test_precision_scores).std(), 2)))
     
-    print('Test mean F1: {} +/- {}'.format(round(pd.Series(test_f1_scores).mean(), 2),
-                                           round(pd.Series(test_f1_scores).std(), 2)))
+    print('Test mean ROC-AUC: {} +/- {}'.format(round(pd.Series(test_roc_auc_scores).mean(), 2),
+                                                  round(pd.Series(test_roc_auc_scores).std(), 3)))  
+    
     print('\n')
     
     if type(clf) == DecisionTreeClassifier:
         features = order_features_tree(clf.feature_importances_, X_scaled)
+    elif type(clf) == RandomForestClassifier:
+        features = order_features_tree(clf.feature_importances_, X_scaled)
+    elif type(clf) == AdaBoostClassifier:
+        features = order_features_tree(clf.feature_importances_, X_scaled)
     elif type(clf) == KNeighborsClassifier:
+        pass
+    elif type(clf) == XGBClassifier:
         pass
     else:
         features = order_features(clf.coef_, X_scaled)
     
-    if type(clf) != KNeighborsClassifier:
+    if (type(clf) != KNeighborsClassifier) and (type(clf) != XGBClassifier) and (type(clf) != AdaBoostClassifier):
         print('Feature weights:', '\n', features, '\n')
         print('Confusion matrices for each fold test set:', '\n')
     
