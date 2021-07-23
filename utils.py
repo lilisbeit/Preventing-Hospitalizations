@@ -11,7 +11,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.model_selection import cross_val_score, cross_validate
 from sklearn.naive_bayes import ComplementNB
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from xgboost import XGBClassifier
 
@@ -136,9 +136,6 @@ def k_fold_validator(X, y, classifier, cv=5):
     print('Classifier:', clf)
     print('Cross-validation folds:', cv)
     
-    print('\n')
-    print('Mean ROC-AUC Score:', round(cross_val_score(clf, X_scaled, y, scoring='roc_auc').mean(), 3))
-    
     
     for train_index, test_index in kf.split(X_scaled):
 
@@ -171,7 +168,7 @@ def k_fold_validator(X, y, classifier, cv=5):
                                                   round(pd.Series(train_precision_scores).std(), 2)))
     
     print('Train mean ROC-AUC: {} +/- {}'.format(round(pd.Series(train_roc_auc_scores).mean(), 2),
-                                                  round(pd.Series(train_roc_auc_scores).std(), 3)))   
+                                                  round(pd.Series(train_roc_auc_scores).std(), 2)))   
     print('\n')
     
     print('Test mean recall: {} +/- {}'.format(round(pd.Series(test_recall_scores).mean(), 2),
@@ -181,7 +178,7 @@ def k_fold_validator(X, y, classifier, cv=5):
                                                   round(pd.Series(test_precision_scores).std(), 2)))
     
     print('Test mean ROC-AUC: {} +/- {}'.format(round(pd.Series(test_roc_auc_scores).mean(), 2),
-                                                  round(pd.Series(test_roc_auc_scores).std(), 3)))  
+                                                  round(pd.Series(test_roc_auc_scores).std(), 2)))  
     
     print('\n')
     
@@ -191,6 +188,8 @@ def k_fold_validator(X, y, classifier, cv=5):
         features = order_features_tree(clf.feature_importances_, X_scaled)
     elif type(clf) == AdaBoostClassifier:
         features = order_features_tree(clf.feature_importances_, X_scaled)
+    elif type(clf) == GradientBoostingClassifier:
+        features = order_features_tree(clf.feature_importances_, X_scaled)   
     elif type(clf) == KNeighborsClassifier:
         pass
     elif type(clf) == XGBClassifier:
@@ -199,8 +198,9 @@ def k_fold_validator(X, y, classifier, cv=5):
         features = order_features(clf.coef_, X_scaled)
     
     if (type(clf) != KNeighborsClassifier) and (type(clf) != XGBClassifier) and (type(clf) != AdaBoostClassifier):
-        print('Feature weights:', '\n', features, '\n')
-        print('Confusion matrices for each fold test set:', '\n')
+         if (type(clf) != GradientBoostingClassifier):
+            print('Feature weights:', '\n', features, '\n')
+            print('Confusion matrices for each fold test set:', '\n')
     
 
 
