@@ -157,7 +157,7 @@ def k_fold_validator(X, y, classifier, cv=5):
         
 
         plot_confusion_matrix(clf, X_test, y_test)
-        plt.title('Test set')
+        plt.title('Error Matrix - Test Set', fontsize=18, pad=15)
         plt.xticks(ticks=(0,1), labels=['Not \nHospitalized', 'Hospitalized'], fontsize=12)
         plt.yticks(ticks=(0,1), labels=['Not \nHospitalized', 'Hospitalized'], fontsize=12)
         plt.xlabel('Predicted Label', labelpad=15)
