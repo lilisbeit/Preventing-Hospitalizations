@@ -2,7 +2,7 @@
 
 Author: Lili Beit
 
-![image of computer digits in a heart shape](images/alexander-sinn-KgLtFCgfC28-unsplash-2.jpg)
+![image of computer digits in a heart shape](images/alexander-sinn-KgLtFCgfC28-unsplash-2.png)
   Photo by <a href="https://unsplash.com/@swimstaralex?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Alexander Sinn</a> on <a href="https://unsplash.com/s/photos/machine-learning?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText">Unsplash</a>
 
 ## Overview
@@ -25,7 +25,7 @@ Only 8.5% of NHANES participants were hospitalized, reflecting a large class imb
 
 ![doughnut chart showing 8.5% of patients as hospitalized, 91.5 % as not hospitalized](images/label-distribution-pie-1.png)
 
-The data cleaning and feature engineering steps I followed can be found in [this notebook](https://github.com/lilisbeit/nhanes/blob/main/data-cleaning-and-feature_engineering.ipynb).
+The data cleaning and feature engineering steps I followed can be found in [this notebook](https://github.com/lilisbeit/nhanes/blob/main/data-cleaning-and-feature-engineering.ipynb).
 
 
 ## Modeling
@@ -57,6 +57,10 @@ The final model is a logistic regression with a **recall score of 0.69, a precis
 * age
 * race
 * total number of prescription drugs
+
+Final model predictions on the holdout set are below:
+
+![Confusion matrix showing predicted vs true hospitalized and not hospitalized patients.  The matrix shows 662 true negatives, 20 false negatives, 44 true positives, and 164 false positives.](images/final-model-holdout.png)
 
 ## Conclusions
 Identifying hospitalized NHANES participants was a challenging problem since they comprise just 8.5% of all participants, and because some hospitalizations are due to random accidents rather than prior medical conditions. The final model provides value to ACOs by correctly predicting 69% of hospitalized patients, while keeping false positives (people whom the model predicted would be hospitalized but were not) to less than 80% of all predicted positives.
